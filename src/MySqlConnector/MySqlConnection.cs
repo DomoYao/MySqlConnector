@@ -171,7 +171,11 @@ public sealed class MySqlConnection : DbConnection, ICloneable
 
 		using (var cmd = new MySqlCommand($"set session transaction isolation level {isolationLevelValue};", this) { NoActivity = true })
 		{
-			await cmd.ExecuteNonQueryAsync(ioBehavior, cancellationToken).ConfigureAwait(false);
+			//The default InnoDB level is REPEATABLE READ,so there is no need to execute.
+			if (isolationLevel != IsolationLevel.Unspecified)
+			{
+				await cmd.ExecuteNonQueryAsync(ioBehavior, cancellationToken).ConfigureAwait(false);
+			}
 
 			var consistentSnapshotText = isolationLevel == IsolationLevel.Snapshot ? " with consistent snapshot" : "";
 			var readOnlyText = isReadOnly switch
